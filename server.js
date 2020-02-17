@@ -34,31 +34,32 @@ app.get('/messages', (req, res) => {
     });
 });
 
-app.post('/message', (req, res) => {
-    var message = new Message(req.body);
-    message.save()
-        .then(() => {
-            console.log('saved');
-            return Message.findOne({message: 'badword'});
-        })
-        .then((censored) => {
-            if (censored) {
-                console.log('censored words found', censored);
-                return Message.deleteOne({_id: censored.id});
-            }
-
+app.post('/message', async (req, res) => {
+    try {
+        var message = new Message(req.body);
+        var savedMessage = await message.save();
+        console.log('saved');
+    
+        var censored = await Message.findOne({ message: 'badword' });
+        if (censored) 
+            await Message.deleteOne({ _id: censored.id });
+        else {
             // emit an event from the server to update all connected clients
             // notifying them of a new message
             io.emit('message', req.body);
-
-            // the response status of 200 lets the client know
-            // that everything went well
-            res.sendStatus(200);
-        })
-        .catch((err) => {
-            res.sendStatus(500);
-            return console.log('Error:', err);
-        })
+        }
+    
+        // the response status of 200 lets the client know
+        // that everything went well
+        res.sendStatus(200);
+    } catch (error){
+        res.sendStatus(500);
+        return console.log(error);
+    } finally {
+        // finally is usually used for logging
+        // logger.log('message post called');
+        console.log('message post called');
+    }
 });
 
 io.on('connection', (socket) => {
