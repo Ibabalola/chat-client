@@ -1,6 +1,6 @@
 var express = require('express');
-var bodyParser = require('body-parser'); // Express has no built in parser
 var app = express();
+var bodyParser = require('body-parser'); // Express has no built in parser
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var mongoose = require('mongoose');
@@ -37,7 +37,7 @@ app.get('/messages', (req, res) => {
 app.post('/message', async (req, res) => {
     try {
         var message = new Message(req.body);
-        var savedMessage = await message.save();
+        await message.save();
         console.log('saved');
     
         var censored = await Message.findOne({ message: 'badword' });
