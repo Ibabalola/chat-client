@@ -16,40 +16,59 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // mongodb connection string
-var dbUrl = 'mongodb+srv://ibabalola:abcd1234@learning-node-fdcxp.mongodb.net/test?retryWrites=true&w=majority';
+// var dbUrl = 'mongodb+srv://ibabalola:abcd1234@learning-node-fdcxp.mongodb.net/test?retryWrites=true&w=majority';
+var localDbUrl = 'mongodb://localhost:27017/chat-client-db';
 
-var messages = [
-    { name: 'Tim', message: 'Messages' },
-    { name: 'Isaac', message: 'Messages' },
-    { name: 'Victoria', message: 'Messages' }
-];
+var messageSchema = {
+    name: String,
+    message: String
+};
+
+// a model for structured data storage, which will passed a schema
+var Message = mongoose.model('Message', messageSchema);
 
 // Add routes for endpointd
 app.get('/messages', (req, res) => {
-    res.send(messages);
+    Message.find({}, (err, messages) => {
+        res.send(messages);
+    });
 });
 
 app.post('/message', (req, res) => {
-    console.log('body', req.body);
-    messages.push(req.body);
-    // the response status of 200 lets the client know
-    // that everything went well
-    res.sendStatus(200);
+    var message = new Message(req.body);
+    message.save()
+        .then(() => {
+            console.log('saved');
+            return Message.findOne({message: 'badword'});
+        })
+        .then((censored) => {
+            if (censored) {
+                console.log('censored words found', censored);
+                return Message.deleteOne({_id: censored.id});
+            }
 
-    // emit an event from the server to update all connected clients
-    // notifying them of a new message
-    io.emit('message', req.body);
+            // emit an event from the server to update all connected clients
+            // notifying them of a new message
+            io.emit('message', req.body);
 
+            // the response status of 200 lets the client know
+            // that everything went well
+            res.sendStatus(200);
+        })
+        .catch((err) => {
+            res.sendStatus(500);
+            return console.log('Error:', err);
+        })
 });
 
 io.on('connection', (socket) => {
     console.log('a user connected');
 });
 
-mongoose.connect(dbUrl, { 
-    useNewUrlParser: true, 
-    useUnifiedTopology: true }, 
-    (err) => console.log('mongo db connection', err));
+mongoose.connect(localDbUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}, (err) => console.log('mongo db connection', err));
 
 var server = http.listen(3000, () => {
     console.log(`server is listening on port ${server.address().port}`);
