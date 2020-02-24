@@ -1,9 +1,9 @@
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser'); // Express has no built in parser
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var mongoose = require('mongoose');
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser'); // Express has no built in parser
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+const mongoose = require('mongoose');
 
 app.use(express.static(__dirname));
 
@@ -17,15 +17,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // mongodb connection string
 // var dbUrl = 'mongodb+srv://ibabalola:abcd1234@learning-node-fdcxp.mongodb.net/test?retryWrites=true&w=majority';
-var localDbUrl = 'mongodb://localhost:27017/chat-client-db';
+const localDbUrl = 'mongodb://localhost:27017/chat-client-db';
 
-var messageSchema = {
+const messageSchema = {
     name: String,
     message: String
 };
 
 // a model for structured data storage, which will passed a schema
-var Message = mongoose.model('Message', messageSchema);
+const Message = mongoose.model('Message', messageSchema);
 
 // Add routes for endpointd
 app.get('/messages', (req, res) => {
@@ -71,6 +71,6 @@ mongoose.connect(localDbUrl, {
     useUnifiedTopology: true
 }, (err) => console.log('mongo db connection', err));
 
-var server = http.listen(3000, () => {
+const server = http.listen(3000, () => {
     console.log(`server is listening on port ${server.address().port}`);
 });
